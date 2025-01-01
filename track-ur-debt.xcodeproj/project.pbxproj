@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		F89670282D10E8C300557B04 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = F89670272D10E8C300557B04 /* FirebaseCore */; };
 		F896702B2D11DB5D00557B04 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = F896702A2D11DB5D00557B04 /* BottomSheet */; };
+		F8D5FAB02D25EAB4008BBC94 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F8D5FAAF2D25EAB4008BBC94 /* FirebaseAuth */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F89670282D10E8C300557B04 /* FirebaseCore in Frameworks */,
+				F8D5FAB02D25EAB4008BBC94 /* FirebaseAuth in Frameworks */,
 				F896702B2D11DB5D00557B04 /* BottomSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -129,6 +131,7 @@
 			packageProductDependencies = (
 				F89670272D10E8C300557B04 /* FirebaseCore */,
 				F896702A2D11DB5D00557B04 /* BottomSheet */,
+				F8D5FAAF2D25EAB4008BBC94 /* FirebaseAuth */,
 			);
 			productName = "track-ur-debt";
 			productReference = F8EA113F2CD0C8D700CC62A4 /* track-ur-debt.app */;
@@ -603,6 +606,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F89670292D1186A800557B04 /* XCRemoteSwiftPackageReference "BottomSheet" */;
 			productName = BottomSheet;
+		};
+		F8D5FAAF2D25EAB4008BBC94 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F89670252D10E6B000557B04 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

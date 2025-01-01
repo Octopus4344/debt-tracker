@@ -21,10 +21,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct track_ur_debtApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var loginViewModel = LoginViewModel()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(loginViewModel)
         }
     }
 }

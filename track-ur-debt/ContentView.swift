@@ -10,7 +10,21 @@ import BottomSheet
 
 
 struct ContentView: View {
+    @EnvironmentObject var loginViewModel: LoginViewModel
+    
+    var body: some View {
+        Group {
+            if loginViewModel.isLoggedIn {
+                LayoutView()
+            } else {
+                LoginView()
+            }
+        }
+    }
+}
 
+struct LayoutView: View {
+    
     @State private var showForm = false
     init() {
 
@@ -75,6 +89,7 @@ struct ContentView: View {
             
         }
     }
+    
 }
 
 struct HomeView: View {
@@ -183,4 +198,5 @@ struct AddDebdtFormView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(LoginViewModel())
 }
