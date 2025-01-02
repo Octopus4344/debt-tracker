@@ -190,6 +190,59 @@ class LoginViewModel: ObservableObject{
         }
     }
     
+    func rejectFriendRequest(fromUID friendUID: String) async {
+        let userRef = db.collection("users")
+        
+        do {
+            let currentUserRef = db.collection("users").document(currentUser.uid)
+            let friendUserRef = db.collection("users").document(friendUID)
+            
+            try await currentUserRef.updateData(["incomingRequests": FieldValue.arrayRemove([friendUID])])
+            try await friendUserRef.updateData(["outgoingRequests": FieldValue.arrayRemove([currentUser.uid])])
+            
+            DispatchQueue.main.async {
+                self.storedUser?.incomingRequests.removeAll { $0 == friendUID }
+            }
+        }
+        catch {
+            self.hasError = true
+            self.errorMessage = error.localizedDescription
+        }
+        
+    }
+    
+    func acceptFriendRequest(fromUID friendUID: String) async {
+        let userRef = db.collection("users")
+        
+        do {
+            let currentUserRef = db.collection("users").document(currentUser.uid)
+            let friendUserRef = db.collection("users").document(friendUID)
+            let friendSnapshot = try await friendUserRef.getDocument()
+            
+            guard let friendData = friendSnapshot.data(), let friend = FirestoreUser(from: friendData) else {
+                self.hasError = true
+                self.errorMessage = "Couldn't retrieve friend data"
+                return
+            }
+            
+            try await currentUserRef.updateData(["incomingRequests": FieldValue.arrayRemove([friendUID]),
+                                                 "Friends":FieldValue.arrayUnion([friend.uid])
+                                                 ])
+            
+            try await friendUserRef.updateData(["outgoingRequests": FieldValue.arrayRemove([currentUser.uid]),
+                                                "Friends":FieldValue.arrayUnion([currentUser.uid])
+                                               ])
+            DispatchQueue.main.async {
+                self.storedUser?.friends.append(friend.uid)
+                self.storedUser?.incomingRequests.removeAll { $0 == friendUID }
+            }
+        }
+        catch {
+            self.hasError = true
+            self.errorMessage = error.localizedDescription
+        }
+    }
+    
     
     deinit{
         Auth.auth().removeStateDidChangeListener(handler)
