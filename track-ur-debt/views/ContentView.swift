@@ -11,6 +11,14 @@ import BottomSheet
 
 struct ContentView: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
+    init() {
+        
+        UITabBar.appearance().backgroundColor = UIColor.black
+        
+        UITabBar.appearance().overrideUserInterfaceStyle = .dark
+        
+        UITabBar.appearance().unselectedItemTintColor = UIColor.lightGray
+    }
     
     var body: some View {
         Group {
@@ -31,14 +39,6 @@ struct ContentView: View {
 struct LayoutView: View {
     
     @State private var showForm = false
-    init() {
-        
-        UITabBar.appearance().backgroundColor = UIColor.black
-        
-        UITabBar.appearance().overrideUserInterfaceStyle = .dark
-        
-        UITabBar.appearance().unselectedItemTintColor = UIColor.lightGray
-    }
     
     
     var body: some View {
