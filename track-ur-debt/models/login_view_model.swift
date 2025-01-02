@@ -20,7 +20,7 @@ struct FirestoreUser {
     let name: String
     var friends: [String]
     var incomingRequests: [String]
-    let outgoingRequests: [String]
+    var outgoingRequests: [String]
     
     init?(from data: [String: Any]) {
         guard let uid = data["uid"] as? String,
@@ -149,6 +149,45 @@ class LoginViewModel: ObservableObject{
             }
         }
         
+    }
+    
+    func sendFriendRequest(toEmail friendEmail: String) async{
+        let userRef = db.collection("users")
+        do {
+            let querySnapshot = try await userRef.whereField("email", isEqualTo: friendEmail).getDocuments()
+            
+            guard let friendDocument = querySnapshot.documents.first else {
+                self.hasError = true
+                self.errorMessage = "No user found with that email"
+                return
+            }
+            
+            let friendData = friendDocument.data()
+            guard let friend = FirestoreUser(from: friendData) else {
+                self.hasError = true
+                self.errorMessage = "Friend request already sent"
+                return
+            }
+            
+            let currentUserRef = db.collection("users").document(currentUser.uid)
+            let friendUserRef = db.collection("users").document(friend.uid)
+            
+            try await currentUserRef.updateData([
+                "outgoingRequests": FieldValue.arrayUnion([friend.uid])
+            ])
+            
+            try await friendUserRef.updateData([
+                "incomingRequests": FieldValue.arrayUnion([currentUser.uid])
+            ])
+            
+            DispatchQueue.main.async {
+                self.storedUser?.outgoingRequests.append(friend.uid)
+            }
+        }
+        catch {
+            self.hasError = true
+            self.errorMessage = error.localizedDescription
+        }
     }
     
     

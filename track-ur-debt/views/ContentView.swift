@@ -143,9 +143,38 @@ struct HomeView: View {
 
 
 struct FriendsView: View {
+    @EnvironmentObject var loginViewModel: LoginViewModel
+    @State private var friendEmail: String = ""
+    @State private var isFriendRequestBeingSent: Bool = false
     var body: some View{
         VStack {
-            Text("You friends list")
+            TextField("Send a request", text: $friendEmail)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            Button(action: {
+                Task {
+                    isFriendRequestBeingSent = true
+                    await loginViewModel.sendFriendRequest(toEmail: friendEmail)
+                    isFriendRequestBeingSent = false
+                    friendEmail = ""
+                }
+            }) {
+                if isFriendRequestBeingSent {
+                    ProgressView()
+                }
+                else {
+                    Text("Send a request")
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.horizontal)
+            .disabled(friendEmail.isEmpty || isFriendRequestBeingSent)
+            
+            if loginViewModel.hasError {
+                Text(loginViewModel.errorMessage)
+                    .foregroundColor(.red)
+                    .padding()
+            }
         }
     }
 }
