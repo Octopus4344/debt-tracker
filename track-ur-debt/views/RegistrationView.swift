@@ -1,12 +1,13 @@
 //
-//  LoginView.swift
+//  RegistrationView.swift
 //  track-ur-debt
 //
-//  Created by Apolonia Abramowicz on 01/01/2025.
+//  Created by Apolonia Abramowicz on 02/01/2025.
 //
+
 import SwiftUI
 
-struct LoginView: View {
+struct SignUpView: View {
     
     @EnvironmentObject var loginViewModel: LoginViewModel
     
@@ -23,42 +24,25 @@ struct LoginView: View {
             .textFieldStyle(.roundedBorder)
     }
     
-    fileprivate func LoginButton() -> some View {
+    fileprivate func SignUputton() -> some View {
         Button(action: {
             Task {
-                await loginViewModel.signIn()
+                await loginViewModel.signUp()
             }
         }) {
-            Text("Sign In")
+            Text("Sign Up")
                 .foregroundColor(.blue)
             
         }
     }
-    fileprivate func LogoutButton() -> some View {
-        Button(action: {
-            Task {
-                await loginViewModel.signOut()
-            }
-        }) {
-            Text("Log Out")
-        }
-    }
     
-    fileprivate func UserInfo() -> some View {
-        VStack{
-            Text("UID: \(loginViewModel.currentUser.uid)")
-            Text("Email: \(loginViewModel.currentUser.email)")
-            LogoutButton()
-        }
-        
-    }
     
     var body: some View {
         VStack {
 
                 EmailInput()
                 PasswordInput()
-                LoginButton()
+                SignUputton()
             
         }
         .alert("Error", isPresented: $loginViewModel.hasError) {

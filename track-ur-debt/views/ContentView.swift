@@ -17,7 +17,12 @@ struct ContentView: View {
             if loginViewModel.isLoggedIn {
                 LayoutView()
             } else {
-                LoginView()
+                if loginViewModel.showSignupView {
+                    SignUpView()
+                }
+                else {
+                    LoginView()
+                }
             }
         }
     }
@@ -27,12 +32,12 @@ struct LayoutView: View {
     
     @State private var showForm = false
     init() {
-
-    UITabBar.appearance().backgroundColor = UIColor.black
         
-    UITabBar.appearance().overrideUserInterfaceStyle = .dark
+        UITabBar.appearance().backgroundColor = UIColor.black
         
-    UITabBar.appearance().unselectedItemTintColor = UIColor.lightGray
+        UITabBar.appearance().overrideUserInterfaceStyle = .dark
+        
+        UITabBar.appearance().unselectedItemTintColor = UIColor.lightGray
     }
     
     
@@ -95,7 +100,7 @@ struct LayoutView: View {
 struct HomeView: View {
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.65)
     @State var searchText: String = ""
-
+    
     let words: [String] = ["birthday", "pancake", "expansion", "brick", "bushes", "coal", "calendar", "home", "pig", "bath", "reading", "cellar", "knot", "year", "ink"]
     
     var filteredWords: [String] {
@@ -106,63 +111,36 @@ struct HomeView: View {
     var body: some View {
         //A green gradient as a background that ignores the safe area.
         VStack {
-                Text("Home")
-                    .font(.largeTitle)
-                    .foregroundColor(.white)
-                }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black)
-            .edgesIgnoringSafeArea(.all)
+            Text("Home")
+                .font(.largeTitle)
+                .foregroundColor(.white)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .edgesIgnoringSafeArea(.all)
         
-            .bottomSheet(bottomSheetPosition: self.$bottomSheetPosition, switchablePositions: [
-                .relativeBottom(0.14),
-                .relative(0.4),
-                .relativeTop(0.9)
-            ]) {
-                //The list of nouns that will be filtered by the searchText.
-                ForEach(self.filteredWords, id: \.self) { word in
-                    Text(word)
-                        .font(.title)
-                        .padding([.leading, .bottom])
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+        .bottomSheet(bottomSheetPosition: self.$bottomSheetPosition, switchablePositions: [
+            .relativeBottom(0.14),
+            .relative(0.4),
+            .relativeTop(0.9)
+        ]) {
+            //The list of nouns that will be filtered by the searchText.
+            ForEach(self.filteredWords, id: \.self) { word in
+                Text(word)
+                    .font(.title)
+                    .padding([.leading, .bottom])
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .enableAppleScrollBehavior()
-            .customBackground(
-                Color.darkerGreen
-                    .cornerRadius(30)
-            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .enableAppleScrollBehavior()
+        .customBackground(
+            Color.darkerGreen
+                .cornerRadius(30)
+        )
     }
 }
-    
-//    @State private var showingBottomSheet = true
-//
-//    var body: some View {
-//        
-//        VStack {
-//            Text("Home")
-//                .font(.largeTitle)
-//                .foregroundColor(.white)
-//        }
-//        .frame(maxWidth: .infinity, maxHeight: .infinity)
-//        .background(Color.black)
-        // 1.
-//        .sheet(isPresented: $showingBottomSheet) {
-//            ScrollView {
-//                // Add content of the bottom sheet here.
-//            }
-//            // 2.
-//            .interactiveDismissDisabled()
-//            // 3.
-//            .presentationDetents([.height(300), .medium, .large])
-//            // 4.
-//            .presentationBackgroundInteraction(
-//                .enabled(upThrough: .large)
-//            )
-//        }
-//    }
-//}
+
 
 struct FriendsView: View {
     var body: some View{
@@ -172,13 +150,7 @@ struct FriendsView: View {
     }
 }
 
-struct ProfileView: View {
-    var body: some View{
-        VStack {
-            Text("Your profile")
-        }
-    }
-}
+
 
 struct AddDebdtFormView: View {
     @State private var pays: String = ""

@@ -15,12 +15,13 @@ struct User {
 
 class LoginViewModel: ObservableObject{
     
-    @Published var email = "email@p.pl"
-    @Published var password = "password"
+    @Published var email = "email@p1.pl"
+    @Published var password = "123456"
     @Published private var _currentUser : User? = nil
     @Published var hasError = false
     @Published var errorMessage = ""
     @Published var isLoggedIn = false
+    @Published var showSignupView = false
     
     private var handler = Auth.auth().addStateDidChangeListener{_,_ in }
     
@@ -59,7 +60,16 @@ class LoginViewModel: ObservableObject{
             hasError = true
             errorMessage = error.localizedDescription
         }
-        
+    }
+    
+    func signUp() async {
+        hasError = false
+        do{
+            try await Auth.auth().createUser(withEmail: email, password: password)
+        }catch{
+            hasError = true
+            errorMessage = error.localizedDescription
+        }
     }
     
     deinit{
