@@ -36,13 +36,23 @@ struct SignUpView: View {
         }
     }
     
+    fileprivate func ToggleToSignIn() -> some View {
+        Button(action: {
+            loginViewModel.showSignupView = false
+        }) {
+            Text("Sign In")
+                .foregroundColor(.gray)
+            
+        }
+    }
     
     var body: some View {
         VStack {
-
-                EmailInput()
-                PasswordInput()
-                SignUputton()
+            
+            EmailInput()
+            PasswordInput()
+            SignUputton()
+            ToggleToSignIn()
             
         }
         .alert("Error", isPresented: $loginViewModel.hasError) {

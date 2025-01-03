@@ -103,6 +103,14 @@ struct FriendsView: View {
                                     }
                                 }
                             }
+                        Button(action: {
+                            Task {
+                                await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
+                            }
+                        }) {
+                            Image(systemName: "rectangle.portrait.badge.plus.fill")
+                        }
+                        
                     }
                 }
             }

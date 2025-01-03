@@ -14,6 +14,27 @@ struct User {
     let email: String
 }
 
+struct Transaction {
+    let amount: Double
+    let date: Date
+    let paidBy: String
+    
+    init?(from data: [String: Any]) {
+        guard let amount = data["amount"] as? Double,
+              let date = data["date"] as? Date,
+              let paidBy = data["paidBy"] as? String else {
+            return nil
+        }
+        self.amount = amount
+        self.date = date
+        self.paidBy = paidBy
+    }
+    
+    func toDictionary() -> [String: Any] {
+        return ["amount": amount, "date": Timestamp(date: date), "paidBy": paidBy]
+    }
+}
+
 struct FirestoreUser {
     let uid: String
     let email: String
@@ -21,6 +42,7 @@ struct FirestoreUser {
     var friends: [String]
     var incomingRequests: [String]
     var outgoingRequests: [String]
+    var transactions : [String : [Transaction]]
     
     init?(from data: [String: Any]) {
         guard let uid = data["uid"] as? String,
@@ -34,11 +56,20 @@ struct FirestoreUser {
         self.friends = data["friends"] as? [String] ?? []
         self.incomingRequests = data["incomingRequests"] as? [String] ?? []
         self.outgoingRequests = data["outgoingRequests"] as? [String] ?? []
+        
+        if let rawTransactions = data["transactions"] as? [String : [[String : Any]]] {
+            self.transactions = rawTransactions.compactMapValues { $0.compactMap { Transaction(from: $0)}}
+        }
+        else {
+            self.transactions = [:]
+        }
     }
     
     func toDictionary() -> [String: Any] {
-        return ["uid": uid, "email": email, "name": name, "friends": friends, "incomingRequests": incomingRequests, "outgoingRequests": outgoingRequests]
-    }
+        var dictionary: [String: Any] = ["uid": uid, "email": email, "name": name, "friends": friends, "incomingRequests": incomingRequests, "outgoingRequests": outgoingRequests]
+        dictionary["transactions"] = transactions.mapValues { $0.map { $0.toDictionary()}}
+        return dictionary
+}
 }
 
 class LoginViewModel: ObservableObject{
@@ -255,6 +286,32 @@ class LoginViewModel: ObservableObject{
             print("Error fetching user email: \(error)")
         }
         return uid
+    }
+    
+    func addTransaction(withUID friendUID: String, amount: Double, paidBy: String) async {
+        let userRef = Firestore.firestore().collection("users").document(currentUser.uid)
+        let friendRef = Firestore.firestore().collection("users").document(friendUID)
+        let data: [String: Any] = ["amount": amount, "date": Date(), "paidBy": paidBy]
+        guard let transaction = Transaction(from: data) else { return }
+        
+        do{
+            try await userRef.updateData([
+                "transactions.\(friendUID)": FieldValue.arrayUnion([transaction.toDictionary()])
+            ])
+            try await friendRef.updateData([
+                "transactions.\(currentUser.uid)": FieldValue.arrayUnion([transaction.toDictionary()])
+            ])
+            
+            DispatchQueue.main.async {
+                self.storedUser?.transactions[friendUID, default: []].append(transaction)
+            }
+        }
+        catch {
+            self.hasError = true
+            self.errorMessage = error.localizedDescription
+        }
+        
+        
     }
     
     
