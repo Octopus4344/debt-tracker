@@ -141,7 +141,21 @@ struct HomeView: View {
     }
 }
 
-
+struct AddDebdtFormView: View {
+    @State private var pays: String = ""
+    @State private var indebted: String = ""
+    @State private var amount: String = ""
+    @State private var currency: String = ""
+    
+    var body: some View {
+        Form {
+            TextField("Pays", text: $pays)
+            TextField("Indebted", text: $indebted)
+            TextField("Amount", text: $amount)
+            TextField("Currency", text: $currency)
+        }
+    }
+}
 
 
 #Preview {

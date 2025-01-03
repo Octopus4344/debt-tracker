@@ -226,11 +226,11 @@ class LoginViewModel: ObservableObject{
             }
             
             try await currentUserRef.updateData(["incomingRequests": FieldValue.arrayRemove([friendUID]),
-                                                 "Friends":FieldValue.arrayUnion([friend.uid])
+                                                 "friends":FieldValue.arrayUnion([friend.uid])
                                                  ])
             
             try await friendUserRef.updateData(["outgoingRequests": FieldValue.arrayRemove([currentUser.uid]),
-                                                "Friends":FieldValue.arrayUnion([currentUser.uid])
+                                                "friends":FieldValue.arrayUnion([currentUser.uid])
                                                ])
             DispatchQueue.main.async {
                 self.storedUser?.friends.append(friend.uid)
@@ -241,6 +241,20 @@ class LoginViewModel: ObservableObject{
             self.hasError = true
             self.errorMessage = error.localizedDescription
         }
+    }
+    
+    func fetchUserEmail(forUID uid: String) async -> String {
+        let userRef = Firestore.firestore().collection("users").document(uid)
+        do {
+            let snapshot = try await userRef.getDocument()
+            if let email = snapshot.data()?["email"] as? String {
+                return email
+            }
+        }
+        catch {
+            print("Error fetching user email: \(error)")
+        }
+        return uid
     }
     
     

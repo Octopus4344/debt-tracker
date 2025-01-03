@@ -11,6 +11,7 @@ struct FriendsView: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
     @State private var friendEmail: String = ""
     @State private var isFriendRequestBeingSent: Bool = false
+    @State private var friendEmails: [String: String] = [:]
     var body: some View{
         VStack {
             TextField("Send a request", text: $friendEmail)
@@ -35,8 +36,81 @@ struct FriendsView: View {
             .padding(.horizontal)
             .disabled(friendEmail.isEmpty || isFriendRequestBeingSent)
             
+            Divider()
+                .padding(.vertical)
             
+            Text("Your friend requests")
+                .font(.headline)
+            
+            if let incomingRequests = loginViewModel.currentStoredUser?.incomingRequests, !incomingRequests.isEmpty {
+                List(incomingRequests, id: \.self) { friendUID in
+                    HStack {
+                        Text(friendEmails[friendUID] ?? "loading...")
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .onAppear {
+                                Task {
+                                    if friendEmails[friendUID] == nil {
+                                        let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
+                                        DispatchQueue.main.async {
+                                            friendEmails[friendUID] = email
+                                        }
+                                    }
+                                }
+                            }
+                        Spacer()
+                        Button(action: {
+                            Task {
+                                await loginViewModel.acceptFriendRequest(fromUID: friendUID)
+                            }
+                        }) {
+                            Image(systemName: "person.fill.checkmark")
+                        }
+                        Button(action: {
+                            Task {
+                                await loginViewModel.rejectFriendRequest(fromUID: friendUID)
+                            }
+                        }) {
+                            Image(systemName: "person.fill.xmark")
+                        }
+                    }
+                }
+            }
+            else {
+                Text("No friends requests")
+            }
+            
+            
+            Divider()
+                .padding(.vertical)
+            
+            Text("Your friends")
+                .font(.headline)
+            
+            if let friends = loginViewModel.currentStoredUser?.friends, !friends.isEmpty {
+                List(friends, id: \.self) { friendUID in
+                    HStack {
+                        Text(friendEmails[friendUID] ?? "loading...")
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .onAppear {
+                                Task {
+                                    if friendEmails[friendUID] == nil {
+                                        let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
+                                        DispatchQueue.main.async {
+                                            friendEmails[friendUID] = email
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+            else {
+                Text("No friends")
+            }
         }
+        
         .alert("Error", isPresented: $loginViewModel.hasError) {
         } message: {
             Text(loginViewModel.errorMessage)
@@ -47,18 +121,7 @@ struct FriendsView: View {
 
 
 
-struct AddDebdtFormView: View {
-    @State private var pays: String = ""
-    @State private var indebted: String = ""
-    @State private var amount: String = ""
-    @State private var currency: String = ""
-    
-    var body: some View {
-        Form {
-            TextField("Pays", text: $pays)
-            TextField("Indebted", text: $indebted)
-            TextField("Amount", text: $amount)
-            TextField("Currency", text: $currency)
-        }
-    }
+#Preview {
+    ContentView()
+        .environmentObject(LoginViewModel())
 }
