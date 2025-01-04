@@ -39,6 +39,7 @@ struct ContentView: View {
 struct LayoutView: View {
     
     @State private var showForm = false
+    @State private var isTabBarHidden = false
     
     
     var body: some View {
@@ -162,3 +163,5 @@ struct AddDebdtFormView: View {
     ContentView()
         .environmentObject(LoginViewModel())
 }
+
+

@@ -11,7 +11,7 @@ struct LoginView: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
     
     fileprivate func EmailInput() -> some View {
-        TextField("Email", text: $loginViewModel.email)
+        CustomTextField(label: "Email", placeholder: "email@example.com", text: $loginViewModel.email)
             .keyboardType(.emailAddress)
             .disableAutocorrection(true)
             .autocapitalization(.none)
@@ -19,20 +19,16 @@ struct LoginView: View {
     }
     
     fileprivate func PasswordInput() -> some View {
-        SecureField("Password", text: $loginViewModel.password)
+        CustomSecureTextField(label: "Password", placeholder: "password", text: $loginViewModel.password)
             .textFieldStyle(.roundedBorder)
     }
     
     fileprivate func LoginButton() -> some View {
-        Button(action: {
+        CustomButton(text: "Log in", action: {
             Task {
                 await loginViewModel.signIn()
             }
-        }) {
-            Text("Sign In")
-                .foregroundColor(.blue)
-            
-        }
+        })
     }
     
     fileprivate func ToggleToSignUp() -> some View {
@@ -47,19 +43,33 @@ struct LoginView: View {
     
     
     var body: some View {
-        VStack {
-        
-            EmailInput()
-            PasswordInput()
-            LoginButton()
-            ToggleToSignUp()
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+            VStack{
+                Text("Log in")
+                    .font(.largeTitle)
+                    .foregroundColor(.white)
+                    .bold()
+                EmailInput()
+                PasswordInput()
+                Spacer()
+                LoginButton()
+                ToggleToSignUp()
+            }
+            .alert("Error", isPresented: $loginViewModel.hasError) {
+            } message: {
+                Text(loginViewModel.errorMessage)
+            }
+            .padding(.top, 100)
+            .padding(.bottom, 30)
+            .padding(.vertical, 25)
             
         }
-        .alert("Error", isPresented: $loginViewModel.hasError) {
-        } message: {
-            Text(loginViewModel.errorMessage)
-        }
-        .padding()
     }
 }
 
+#Preview {
+    ContentView()
+        .environmentObject(LoginViewModel())
+}
