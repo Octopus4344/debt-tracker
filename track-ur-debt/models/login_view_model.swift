@@ -69,7 +69,7 @@ struct FirestoreUser {
         var dictionary: [String: Any] = ["uid": uid, "email": email, "name": name, "friends": friends, "incomingRequests": incomingRequests, "outgoingRequests": outgoingRequests]
         dictionary["transactions"] = transactions.mapValues { $0.map { $0.toDictionary()}}
         return dictionary
-}
+    }
 }
 
 class LoginViewModel: ObservableObject{
@@ -258,7 +258,7 @@ class LoginViewModel: ObservableObject{
             
             try await currentUserRef.updateData(["incomingRequests": FieldValue.arrayRemove([friendUID]),
                                                  "friends":FieldValue.arrayUnion([friend.uid])
-                                                 ])
+                                                ])
             
             try await friendUserRef.updateData(["outgoingRequests": FieldValue.arrayRemove([currentUser.uid]),
                                                 "friends":FieldValue.arrayUnion([currentUser.uid])
@@ -310,10 +310,40 @@ class LoginViewModel: ObservableObject{
             self.hasError = true
             self.errorMessage = error.localizedDescription
         }
-        
-        
     }
     
+    func calculateBalance(withUID friendUID: String) -> Double  {
+        guard let transactions = storedUser?.transactions[friendUID] else { return 0.0 }
+        var balance: Double = 0
+        
+        for transaction in transactions {
+            if transaction.paidBy == currentUser.uid {
+                balance += transaction.amount
+            }
+            else {
+                balance -= transaction.amount
+            }
+        }
+        return balance
+    }
+    
+    func fetchUserTransactions(withUID friendUID: String) async -> [Transaction] {
+        guard let user = _currentUser else { return [] }
+        let useRef = db.collection("users").document(user.uid)
+        
+        do {
+            let snapshot = try await useRef.getDocument()
+            if let data = snapshot.data(),
+               let transactionsData = data["transactions"] as? [String: [[String: Any]]],
+               let transactions = transactionsData[friendUID]?.compactMap({ Transaction(from: $0)}){
+                return transactions
+            }
+        }
+        catch {
+            print("Error fetching transactions: \(error)")
+        }
+        return []
+    }
     
     deinit{
         Auth.auth().removeStateDidChangeListener(handler)
