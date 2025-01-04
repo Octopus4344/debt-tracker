@@ -21,12 +21,12 @@ struct Transaction {
     
     init?(from data: [String: Any]) {
         guard let amount = data["amount"] as? Double,
-              let date = data["date"] as? Date,
+              let date = data["date"] as? Timestamp,
               let paidBy = data["paidBy"] as? String else {
             return nil
         }
         self.amount = amount
-        self.date = date
+        self.date = date.dateValue()
         self.paidBy = paidBy
     }
     
@@ -156,6 +156,8 @@ class LoginViewModel: ObservableObject{
                 return
             }
             DispatchQueue.main.async {
+                print(snapshot?.data())
+                print(storedUser)
                 self.storedUser = storedUser
             }
         }
@@ -315,6 +317,8 @@ class LoginViewModel: ObservableObject{
     func calculateBalance(withUID friendUID: String) -> Double  {
         guard let transactions = storedUser?.transactions[friendUID] else { return 0.0 }
         var balance: Double = 0
+        
+        print(storedUser?.toDictionary())
         
         for transaction in transactions {
             if transaction.paidBy == currentUser.uid {

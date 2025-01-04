@@ -65,130 +65,14 @@ struct FriendsView: View {
                 
                 switch selectedTab {
                 case .friends:
-                    VStack {
-                        if let friends = loginViewModel.currentStoredUser?.friends, !friends.isEmpty {
-                            List(friends, id: \.self) { friendUID in
-                                HStack {
-                                    Text(friendEmails[friendUID] ?? "loading...")
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                        .onAppear {
-                                            Task {
-                                                if friendEmails[friendUID] == nil {
-                                                    let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
-                                                    DispatchQueue.main.async {
-                                                        friendEmails[friendUID] = email
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    Button(action: {
-                                        Task {
-                                            await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
-                                        }
-                                    }) {
-                                        Image(systemName: "rectangle.portrait.badge.plus.fill")
-                                    }
-                                    
-                                }
-                            }
-                        }
-                        else {
-                            Spacer()
-                            Text("No friends")
-                            Spacer()
-                        }
-                    }
+                    FriendListView(loginViewModel: loginViewModel, friendEmails: $friendEmails)
+
                 case .requests:
-                    VStack {
-                        if let incomingRequests = loginViewModel.currentStoredUser?.incomingRequests, !incomingRequests.isEmpty {
-                            List(incomingRequests, id: \.self) { friendUID in
-                                HStack {
-                                    Text(friendEmails[friendUID] ?? "loading...")
-                                        .lineLimit(1)
-                                        .font(.system(size: 20))
-                                        .truncationMode(.tail)
-                                        .onAppear {
-                                            Task {
-                                                if friendEmails[friendUID] == nil {
-                                                    let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
-                                                    DispatchQueue.main.async {
-                                                        friendEmails[friendUID] = email
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    Spacer()
-                                    Button(action: {
-                                        Task {
-                                            await loginViewModel.acceptFriendRequest(fromUID: friendUID)
-                                        }
-                                    }) {
-                                        Image(systemName: "person.fill.checkmark")
-                                            .font(.system(size: 30))
-                                    }
-                                    Button(action: {
-                                        Task {
-                                            await loginViewModel.rejectFriendRequest(fromUID: friendUID)
-                                        }
-                                    }) {
-                                        Image(systemName: "person.fill.xmark")
-                                            .font(.system(size: 30))
-                                    }
-                                }
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 25)
-                                .cornerRadius(100)
-                                
-                            }
-                        }
-                        else {
-                            Text("No friends requests")
-                        }
-                    }
-//                    .padding()
-                    .navigationBarTitle("Friend requests")
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarItems(leading: Button(action: {
-                        selectedTab = .friends
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Friends")
-                        }
-                        .padding(.top,15)
-                    })
+                    FriendRequestsView(loginViewModel: loginViewModel, friendEmails: $friendEmails, onBack: {selectedTab = .friends})
+
                 case .addFriend:
-                    VStack {
-                        CustomTextField(label: "Enter friend's email", placeholder: "friend@email.com" , text: $friendEmail)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .padding(.horizontal)
-                        Spacer()
-                        CustomButton(text: "Send an invitation", action: {
-                            Task {
-                                isFriendRequestBeingSent = true
-                                await loginViewModel.sendFriendRequest(toEmail: friendEmail)
-                                isFriendRequestBeingSent = false
-                                friendEmail = ""
-                            }
-                        })
-                        .padding(.horizontal)
-                        .padding(.top, 50)
-                        .disabled(friendEmail.isEmpty || isFriendRequestBeingSent)
-                        Spacer()
-                        
-                    }
-                    .padding(.top, 25)
-                    .navigationBarTitle("Add a new friend")
-                    .navigationBarItems(leading: Button(action: {
-                        selectedTab = .friends
-                    }) {
-                        HStack {
-                            Image(systemName: "chevron.left")
-                            Text("Friends")
-                        }
-                        .padding(.top,15)
-                    })
+                    AddFriendView(friendEmail: $friendEmail, isFriendRequestBeingSent: $isFriendRequestBeingSent, loginViewModel: loginViewModel, onBack: {selectedTab = .friends})
+
                 }
                 
             }
@@ -202,6 +86,153 @@ struct FriendsView: View {
     }
 }
 
+struct FriendListView: View {
+    @ObservedObject var loginViewModel: LoginViewModel
+    @Binding var friendEmails: [String: String]
+    var body: some View {
+        VStack {
+            if let friends = loginViewModel.currentStoredUser?.friends, !friends.isEmpty {
+                List(friends, id: \.self) { friendUID in
+                    HStack {
+                        Text(friendEmails[friendUID] ?? "loading...")
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .onAppear {
+                                Task {
+                                    if friendEmails[friendUID] == nil {
+                                        let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
+                                        DispatchQueue.main.async {
+                                            friendEmails[friendUID] = email
+                                        }
+                                    }
+                                }
+                            }
+                        Spacer()
+                        Text(String(format: "%.2f zł", loginViewModel.calculateBalance(withUID: friendUID)))
+//                                    Button(action: {
+//                                        Task {
+//                                            await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
+//                                        }
+//                                    }) {
+//                                        Image(systemName: "rectangle.portrait.badge.plus.fill")
+//                                    }
+                        
+                    }
+                }
+            }
+            else {
+                Spacer()
+                Text("No friends")
+                Spacer()
+            }
+        }
+    }
+}
+
+struct FriendRequestsView: View {
+    @ObservedObject var loginViewModel: LoginViewModel
+    @Binding var friendEmails: [String: String]
+    let onBack: () -> Void
+    var body: some View {
+        VStack {
+            if let incomingRequests = loginViewModel.currentStoredUser?.incomingRequests, !incomingRequests.isEmpty {
+                List(incomingRequests, id: \.self) { friendUID in
+                    HStack {
+                        Text(friendEmails[friendUID] ?? "loading...")
+                            .lineLimit(1)
+                            .font(.system(size: 20))
+                            .truncationMode(.tail)
+                            .onAppear {
+                                Task {
+                                    if friendEmails[friendUID] == nil {
+                                        let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
+                                        DispatchQueue.main.async {
+                                            friendEmails[friendUID] = email
+                                        }
+                                    }
+                                }
+                            }
+                        Spacer()
+                        Button(action: {
+                            Task {
+                                await loginViewModel.acceptFriendRequest(fromUID: friendUID)
+                            }
+                        }) {
+                            Image(systemName: "person.fill.checkmark")
+                                .font(.system(size: 30))
+                        }
+                        Button(action: {
+                            Task {
+                                await loginViewModel.rejectFriendRequest(fromUID: friendUID)
+                            }
+                        }) {
+                            Image(systemName: "person.fill.xmark")
+                                .font(.system(size: 30))
+                        }
+                    }
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 25)
+                    .cornerRadius(100)
+                    
+                }
+            }
+            else {
+                Text("No friends requests")
+            }
+        }
+//                    .padding()
+        .navigationBarTitle("Friend requests")
+        .navigationBarBackButtonHidden(true)
+        .navigationBarItems(leading: Button(action: {
+            onBack()
+        }) {
+            HStack {
+                Image(systemName: "chevron.left")
+                Text("Friends")
+            }
+            .padding(.top,15)
+        })
+    }
+}
+
+struct AddFriendView: View {
+    @Binding var friendEmail: String
+    @Binding var isFriendRequestBeingSent: Bool
+    @ObservedObject var loginViewModel: LoginViewModel
+    let onBack: () -> Void
+    var body: some View {
+        VStack {
+            CustomTextField(label: "Enter friend's email", placeholder: "friend@email.com" , text: $friendEmail)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
+            Spacer()
+            CustomButton(text: "Send an invitation", action: {
+                Task {
+                    isFriendRequestBeingSent = true
+                    await loginViewModel.sendFriendRequest(toEmail: friendEmail)
+                    isFriendRequestBeingSent = false
+                    friendEmail = ""
+                }
+            })
+            .padding(.horizontal)
+            .padding(.top, 50)
+            .disabled(friendEmail.isEmpty || isFriendRequestBeingSent)
+            Spacer()
+            
+        }
+        .padding(.top, 25)
+        .navigationBarTitle("Add a new friend")
+        .navigationBarItems(leading: Button(action: {
+            onBack()
+        }) {
+            HStack {
+                Image(systemName: "chevron.left")
+                Text("Friends")
+            }
+            .padding(.top,15)
+        })
+    }
+}
 
 
 #Preview {

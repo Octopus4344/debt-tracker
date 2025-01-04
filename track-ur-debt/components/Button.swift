@@ -29,7 +29,3 @@ struct CustomButton: View {
     
     
 }
-#Preview {
-    ContentView()
-        .environmentObject(LoginViewModel())
-}
