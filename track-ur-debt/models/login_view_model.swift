@@ -14,7 +14,7 @@ struct User {
     let email: String
 }
 
-struct Transaction {
+struct Transaction: Hashable {
     let amount: Double
     let date: Date
     let paidBy: String
@@ -32,6 +32,16 @@ struct Transaction {
     
     func toDictionary() -> [String: Any] {
         return ["amount": amount, "date": Timestamp(date: date), "paidBy": paidBy]
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(amount)
+        hasher.combine(date)
+        hasher.combine(paidBy)
+    }
+    
+    static func == (lhs: Transaction, rhs: Transaction) -> Bool {
+        lhs.amount == rhs.amount && lhs.date == rhs.date && lhs.paidBy == rhs.paidBy
     }
 }
 
@@ -293,8 +303,10 @@ class LoginViewModel: ObservableObject{
     func addTransaction(withUID friendUID: String, amount: Double, paidBy: String) async {
         let userRef = Firestore.firestore().collection("users").document(currentUser.uid)
         let friendRef = Firestore.firestore().collection("users").document(friendUID)
-        let data: [String: Any] = ["amount": amount, "date": Date(), "paidBy": paidBy]
+        let data: [String: Any] = ["amount": amount, "date": Timestamp(date: Date()), "paidBy": paidBy]
+        print("QQQQQQ")
         guard let transaction = Transaction(from: data) else { return }
+        print("XDDDDD")
         
         do{
             try await userRef.updateData([

@@ -27,5 +27,4 @@ struct CustomButton: View {
         .padding(30)
     }
     
-    
 }

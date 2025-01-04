@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import BottomSheet
+
 
 struct FriendsView: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
@@ -93,30 +95,32 @@ struct FriendListView: View {
         VStack {
             if let friends = loginViewModel.currentStoredUser?.friends, !friends.isEmpty {
                 List(friends, id: \.self) { friendUID in
-                    HStack {
-                        Text(friendEmails[friendUID] ?? "loading...")
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .onAppear {
-                                Task {
-                                    if friendEmails[friendUID] == nil {
-                                        let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
-                                        DispatchQueue.main.async {
-                                            friendEmails[friendUID] = email
+                    NavigationLink(destination: FriendDetailsView(friendUID: friendUID, loginViewModel: loginViewModel, friendEmail: friendEmails[friendUID])) {
+                        HStack {
+                            Text(friendEmails[friendUID] ?? "loading...")
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .onAppear {
+                                    Task {
+                                        if friendEmails[friendUID] == nil {
+                                            let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
+                                            DispatchQueue.main.async {
+                                                friendEmails[friendUID] = email
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        Spacer()
-                        Text(String(format: "%.2f zł", loginViewModel.calculateBalance(withUID: friendUID)))
-//                                    Button(action: {
-//                                        Task {
-//                                            await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
-//                                        }
-//                                    }) {
-//                                        Image(systemName: "rectangle.portrait.badge.plus.fill")
-//                                    }
-                        
+                            Spacer()
+                            Text(String(format: "%.2f zł", loginViewModel.calculateBalance(withUID: friendUID)))
+                            //                                    Button(action: {
+                            //                                        Task {
+                            //                                            await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
+                            //                                        }
+                            //                                    }) {
+                            //                                        Image(systemName: "rectangle.portrait.badge.plus.fill")
+                            //                                    }
+                            
+                        }
                     }
                 }
             }
@@ -231,6 +235,101 @@ struct AddFriendView: View {
             }
             .padding(.top,15)
         })
+    }
+}
+
+struct FriendDetailsView: View {
+    let friendUID: String
+    @ObservedObject var loginViewModel: LoginViewModel
+    var friendEmail: String?
+    @State var bottomSheetPosition: BottomSheetPosition = .relative(0.65)
+    @State private var transactions: [Transaction] = []
+    @State private var balance: Double = 0
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy"
+        return formatter.string(from: date)
+    }
+    fileprivate func AddNew() -> some View {
+        CustomButton(text: "Add", action: {
+            Task {
+                await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
+            }
+        }
+    )}
+    
+    
+    var body: some View {
+        VStack {
+            Text(balance < 0 ? "You owe your friend" : "Your friend owe you")
+                .foregroundColor(.gray)
+                .fontWeight(.bold)
+                .padding(.bottom, 1)
+            Text(String(format: "%.2f zł", balance))
+                .font(.system(size: 50, weight: .bold))
+            AddNew()
+
+        }
+        
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black)
+        .edgesIgnoringSafeArea(.all)
+        .navigationTitle(friendEmail ?? "loading...")
+        .navigationBarTitleDisplayMode(.large)
+        
+        .bottomSheet(bottomSheetPosition: self.$bottomSheetPosition, switchablePositions: [
+            .relativeBottom(0.14),
+            .relative(0.4),
+            .relativeTop(0.9)
+        ]) {
+            //The list of nouns that will be filtered by the searchText.
+            VStack {
+                Text("History")
+                    .foregroundColor(.black)
+                    .font(.largeTitle)
+                    .bold()
+                    .padding(.top, 10)
+                if transactions.isEmpty {
+                    Text("No transactions found")
+                        .foregroundColor(.black)
+                        .font(.headline)
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(transactions, id: \.self) { transaction in
+                            HStack {
+                                Text(formatDate(transaction.date))
+                                    .bold()
+                                Spacer()
+                                Text(transaction.paidBy == loginViewModel.currentUser.uid ? String(format: "+ %.2f zł", transaction.amount)
+                                     : String(format: "- %.2f zł", transaction.amount)
+                                )
+                                .font(.system(size: 35, weight: .bold))
+                            }
+                            .padding(35)
+                            .background(Color("Secondary"))
+                            .cornerRadius(35)
+                        }
+                    }
+//                    .padding(.horizontal, 40)
+//                    .padding(.vertical, 40)
+                    .padding()
+                }
+            }
+            .padding(.top, 35)
+            .onAppear {
+                Task {
+                    self.transactions = await loginViewModel.fetchUserTransactions(withUID: friendUID)
+                    self.balance = loginViewModel.calculateBalance(withUID: friendUID)
+                }
+            }
+
+        }
+        .enableAppleScrollBehavior()
+        .customBackground(
+            Color.darkerGreen
+                .cornerRadius(30)
+        )
     }
 }
 
