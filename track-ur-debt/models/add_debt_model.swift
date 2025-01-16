@@ -119,7 +119,7 @@ class AddDebtViewModel: ObservableObject {
             
             
             Task {
-                await loginViewModel.addTransaction(withUID: indebted, amount: amountInPLN, paidBy: pays)
+                await loginViewModel.addTransaction(withUID: transactionUID, amount: amountInPLN, paidBy: pays)
                 if loginViewModel.hasError {
                     DispatchQueue.main.async {
                         self.hasError = true
