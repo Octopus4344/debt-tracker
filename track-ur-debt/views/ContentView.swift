@@ -33,10 +33,12 @@ struct ContentView: View {
                 }
             }
         }
+        .preferredColorScheme(.dark)
     }
 }
 
 struct LayoutView: View {
+    @EnvironmentObject var loginViewModel: LoginViewModel
     
     @State private var showForm = false
     @State private var isTabBarHidden = false
@@ -63,9 +65,8 @@ struct LayoutView: View {
                 
                 VStack {
                     Spacer()
-                    Button(action: {
-                        showForm.toggle()
-                    }) {
+                    NavigationLink(destination: AddDebdtFormView(loginViewModel: loginViewModel)
+                    ) {
                         ZStack {
                             Image("Image")
                             Image(systemName: "plus")
@@ -92,6 +93,10 @@ struct LayoutView: View {
                     }
                 }
             }
+//            .sheet(isPresented: $showForm){
+//                AddDebdtFormView(loginViewModel: loginViewModel)
+//                    .background(Color.black.edgesIgnoringSafeArea(.all))
+//            }
             
         }
     }
@@ -142,21 +147,7 @@ struct HomeView: View {
     }
 }
 
-struct AddDebdtFormView: View {
-    @State private var pays: String = ""
-    @State private var indebted: String = ""
-    @State private var amount: String = ""
-    @State private var currency: String = ""
-    
-    var body: some View {
-        Form {
-            TextField("Pays", text: $pays)
-            TextField("Indebted", text: $indebted)
-            TextField("Amount", text: $amount)
-            TextField("Currency", text: $currency)
-        }
-    }
-}
+
 
 
 #Preview {
