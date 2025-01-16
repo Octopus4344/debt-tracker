@@ -365,3 +365,4 @@ class LoginViewModel: ObservableObject{
         Auth.auth().removeStateDidChangeListener(handler)
     }
 }
+

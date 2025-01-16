@@ -23,32 +23,55 @@ struct AddDebdtFormView: View {
     
     var body: some View {
         Form {
-            Section(header: Text("Add new transaction")) {
+            Section() {
                 CustomTextField(label: "Enter an amount", placeholder: "0.00", text: $viewModel.amount)
+                Spacer()
                 Picker("Choose currency", selection: $viewModel.currency) {
                     ForEach(viewModel.availableCuurencies, id: \.self) { currency in
                         Text(currency).tag(currency)
                     }
                 }
-                CustomTextField(label: "Enter a currency", placeholder: "USD", text: $viewModel.currency)
-            }
-            CustomButton(text: "Add", action: {viewModel.addTransaction()})
-                .alert("Error", isPresented: $viewModel.hasError) {
-                } message: {
-                    Text(viewModel.errorMessage)
-                }
-                .padding()
-            
-                .alert(isPresented: Binding<Bool>(
-                    get: { !viewModel.successMessage.isEmpty },
-                    set: { _ in viewModel.successMessage = "" }
+                Spacer()
+                Picker("Who was paying?", selection: $viewModel.pays) {
+                    if viewModel.friendsWithEmails.isEmpty {
+                        Text("You have no friends added").tag("self")
+                    } else {
+                        ForEach(viewModel.friendsWithEmails, id: \.uid) { friend in
+                            Text(friend.email).tag(friend.uid)
+                        }
+                    }
                     
-                )) {
-                    Alert(title: Text("Succes"), message: Text(viewModel.successMessage) )
                 }
-                .padding()
+                Spacer()
+                Picker("Who is in debt?", selection: $viewModel.indebted) {
+                    if viewModel.friendsWithEmails.isEmpty {
+                        Text("You have no friends added").tag("self")
+                    } else {
+                        ForEach(viewModel.friendsWithEmails, id: \.uid) { friend in
+                            Text(friend.email).tag(friend.uid)
+                        }
+                    }
+                    
+                }
+                CustomButton(text: "Add", action: {viewModel.addTransaction()})
+                    .alert("Error", isPresented: $viewModel.hasError) {
+                    } message: {
+                        Text(viewModel.errorMessage)
+                    }
+                    .padding()
+                
+                    .alert(isPresented: Binding<Bool>(
+                        get: { !viewModel.successMessage.isEmpty },
+                        set: { _ in viewModel.successMessage = "" }
+                        
+                    )) {
+                        Alert(title: Text("Succes"), message: Text(viewModel.successMessage) )
+                    }
+                    .padding()
+            }
+            .listRowBackground(Color.clear)
+
         }
-        .padding()
         .onChange(of: viewModel.currency) {
             viewModel.fetchConversionRate()
         }

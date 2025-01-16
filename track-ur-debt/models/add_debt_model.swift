@@ -16,6 +16,7 @@ class AddDebtViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var successMessage: String = ""
     @Published var conversionRate: Double = 1.0
+    @Published var friendsWithEmails: [(uid: String, email: String)] = []
     
     public let availableCuurencies = ["PLN", "USD", "EUR", "GBP", "CZK"]
     private let apiKey: String = "fca_live_9r3DTzOKWo8YyvDndrpNu9Rl2rELohMD3VuxJBOj"
@@ -24,6 +25,24 @@ class AddDebtViewModel: ObservableObject {
     
     init(loginViewModel: LoginViewModel) {
         self.loginViewModel = loginViewModel
+        Task {
+            await loadFriendWithEmails()
+        }
+    }
+    
+    func loadFriendWithEmails() async {
+        var friendList: [(uid: String, email: String)] = [(loginViewModel.currentUser.uid, "Me")]
+        
+        for friendUID in loginViewModel.currentStoredUser?.friends ?? [] {
+            let email = await loginViewModel.fetchUserEmail(forUID: friendUID)
+            friendList.append((uid: friendUID, email: email))
+        }
+        
+        DispatchQueue.main.async {
+            self.friendsWithEmails = friendList
+            print(self.friendsWithEmails)
+        }
+        
     }
     
     func fetchConversionRate() {
@@ -84,7 +103,20 @@ class AddDebtViewModel: ObservableObject {
                 return
             }
             
+            let isPayerCurrentUser = pays == loginViewModel.currentUser.uid
+            let isIndebtedCurrentUser = indebted == loginViewModel.currentUser.uid
+            
+            if isPayerCurrentUser == isIndebtedCurrentUser {
+                hasError = true
+                errorMessage = "Invalid people assigned"
+                return
+            }
+            
             let amountInPLN = amount * conversionRate
+            
+            let transactionUID = isPayerCurrentUser ? indebted : pays
+            
+            
             
             Task {
                 await loginViewModel.addTransaction(withUID: indebted, amount: amountInPLN, paidBy: pays)
