@@ -67,7 +67,7 @@ struct AddDebdtFormView: View {
                     )) {
                         Alert(title: Text("Succes"), message: Text(viewModel.successMessage) )
                     }
-                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             .listRowBackground(Color.clear)
 
@@ -78,7 +78,9 @@ struct AddDebdtFormView: View {
         .onAppear{
             viewModel.fetchConversionRate()
         }
+        .navigationTitle("Add new transaction")
     }
+        
 }
 
 #Preview {

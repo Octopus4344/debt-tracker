@@ -34,6 +34,13 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            Task {
+                if loginViewModel.isLoggedIn {
+                    await loginViewModel.fetchDataAndCalculateBalance()
+                }
+            }
+        }
     }
 }
 
@@ -100,9 +107,15 @@ struct LayoutView: View {
 }
 
 struct HomeView: View {
+    @EnvironmentObject var loginViewModel: LoginViewModel
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.65)
     @State var searchText: String = ""
-    
+//    @State private var balance: Double = 0
+//    
+//    init(loginViewModel: LoginViewModel) {
+//        self._balance = State(initialValue: loginViewModel.calculateTotalBalance())
+//    }
+
     let words: [String] = ["birthday", "pancake", "expansion", "brick", "bushes", "coal", "calendar", "home", "pig", "bath", "reading", "cellar", "knot", "year", "ink"]
     
     var filteredWords: [String] {
@@ -113,13 +126,18 @@ struct HomeView: View {
     var body: some View {
 
         VStack {
-            Text("Home")
-                .font(.largeTitle)
-                .foregroundColor(.white)
+            Text(loginViewModel.totalBalance < 0 ? "You owe your friends" : "Your friends owe you")
+                .foregroundColor(.gray)
+                .fontWeight(.bold)
+                .padding(.bottom, 1)
+            Text(String(format: "%.2f zł", loginViewModel.totalBalance))
+                .font(.system(size: 50, weight: .bold))
         }
+        
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
         .edgesIgnoringSafeArea(.all)
+        .navigationBarTitleDisplayMode(.large)
         
         .bottomSheet(bottomSheetPosition: self.$bottomSheetPosition, switchablePositions: [
             .relativeBottom(0.14),
@@ -135,12 +153,19 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+
         .enableAppleScrollBehavior()
         .customBackground(
             Color.darkerGreen
                 .cornerRadius(30)
         )
+        .onAppear {
+            Task {
+                await loginViewModel.fetchDataAndCalculateBalance()
+            }
+        }
     }
+
 }
 
 

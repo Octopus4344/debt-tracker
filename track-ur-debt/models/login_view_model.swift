@@ -92,6 +92,7 @@ class LoginViewModel: ObservableObject{
     @Published var errorMessage = ""
     @Published var isLoggedIn = false
     @Published var showSignupView = false
+    @Published var totalBalance: Double = 0.0
     
     private var handler = Auth.auth().addStateDidChangeListener{_,_ in }
     private let db = Firestore.firestore()
@@ -352,13 +353,35 @@ class LoginViewModel: ObservableObject{
             if let data = snapshot.data(),
                let transactionsData = data["transactions"] as? [String: [[String: Any]]],
                let transactions = transactionsData[friendUID]?.compactMap({ Transaction(from: $0)}){
-                return transactions
+                return transactions.reversed()
             }
         }
         catch {
             print("Error fetching transactions: \(error)")
         }
         return []
+    }
+    
+    func calculateTotalBalance() async {
+        guard let friends = storedUser?.friends else {
+            DispatchQueue.main.async { self.totalBalance = 0 }
+            return
+        }
+        var balance: Double = 0
+        print("Balance")
+        
+        for friend in friends {
+            print("Calculating balance for friend: %@\n", friend)
+            balance += calculateBalance(withUID: friend)
+        }
+        
+        DispatchQueue.main.async { self.totalBalance = balance }
+        
+    }
+    
+    func fetchDataAndCalculateBalance() async {
+        await fetchUser()
+        await calculateTotalBalance()
     }
     
     deinit{

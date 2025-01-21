@@ -84,7 +84,7 @@ class AddDebtViewModel: ObservableObject {
             } catch {
                 self.hasError = true
                 self.errorMessage = "Couldn't fetch any data"
-                print(self.errorMessage)
+                print(error.localizedDescription)
             }
         }
     }
