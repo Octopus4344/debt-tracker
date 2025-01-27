@@ -376,7 +376,42 @@ class LoginViewModel: ObservableObject{
         }
         
         DispatchQueue.main.async { self.totalBalance = balance }
+    }
+    
+    func calculateFullDebt() async -> Double {
+        guard let friends = storedUser?.friends else {
+            DispatchQueue.main.async { self.totalBalance = 0 }
+            return 0
+        }
+        var debt: Double = 0
+        print("Debt")
         
+        for friend in friends {
+            print("Calculating debt for friend: %@\n", friend)
+            let friendDebt = calculateBalance(withUID: friend)
+            if(friendDebt < 0){
+                debt += friendDebt
+            }
+        }
+        return debt
+    }
+    
+    func calculateFullDebtToMe() async -> Double {
+        guard let friends = storedUser?.friends else {
+            DispatchQueue.main.async { self.totalBalance = 0 }
+            return 0
+        }
+        var debt: Double = 0
+        print("Debt")
+        
+        for friend in friends {
+            print("Calculating debt for friend: %@\n", friend)
+            let friendDebt = calculateBalance(withUID: friend)
+            if(friendDebt > 0){
+                debt += friendDebt
+            }
+        }
+        return debt
     }
     
     func fetchDataAndCalculateBalance() async {

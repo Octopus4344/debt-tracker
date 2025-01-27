@@ -73,3 +73,4 @@ struct LoginView: View {
     ContentView()
         .environmentObject(LoginViewModel())
 }
+

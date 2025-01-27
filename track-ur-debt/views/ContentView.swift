@@ -7,6 +7,7 @@
 
 import SwiftUI
 import BottomSheet
+import Charts
 
 
 struct ContentView: View {
@@ -110,10 +111,12 @@ struct HomeView: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.65)
     @State var searchText: String = ""
-//    @State private var balance: Double = 0
-//    
-//    init(loginViewModel: LoginViewModel) {
-//        self._balance = State(initialValue: loginViewModel.calculateTotalBalance())
+    @State private var fullDebt: Double = 0
+    @State private var fullDebtToMe: Double = 0
+    
+//    init(loginViewModel: LoginViewModel) async {
+//        self._fullDebt = await State(initialValue: loginViewModel.calculateFullDebt())
+//        self._fullDebtToMe = await State(initialValue:loginViewModel.calculateFullDebtToMe())
 //    }
 
     let words: [String] = ["birthday", "pancake", "expansion", "brick", "bushes", "coal", "calendar", "home", "pig", "bath", "reading", "cellar", "knot", "year", "ink"]
@@ -134,24 +137,59 @@ struct HomeView: View {
                 .font(.system(size: 50, weight: .bold))
         }
         
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.black)
         .edgesIgnoringSafeArea(.all)
         .navigationBarTitleDisplayMode(.large)
+        .padding(.top, 130)
         
         .bottomSheet(bottomSheetPosition: self.$bottomSheetPosition, switchablePositions: [
             .relativeBottom(0.14),
             .relative(0.4),
             .relativeTop(0.9)
         ]) {
-            //The list of nouns that will be filtered by the searchText.
-            ForEach(self.filteredWords, id: \.self) { word in
-                Text(word)
-                    .font(.title)
-                    .padding([.leading, .bottom])
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(spacing: 10) {
+                HStack {
+                    Text("My total debt")
+                        .bold()
+                    Spacer()
+                    Text(String(format: "%.2f zł", self.fullDebt))
+                    .font(.system(size: 35, weight: .bold))
+                }
+                .padding(35)
+                .background(Color("Secondary"))
+                .cornerRadius(35)
+                Spacer()
+                HStack {
+                    Text("Total debt to me")
+                        .bold()
+                    Spacer()
+                    Text(String(format: "%.2f zł", self.fullDebtToMe))
+                    .font(.system(size: 35, weight: .bold))
+                }
+                .padding(35)
+                .background(Color("Secondary"))
+                .cornerRadius(35)
+                Spacer()
+                HStack {
+                    PieChart(fullDebt: self.fullDebt, fullDebtToMe: self.fullDebtToMe)
+                }
+                .padding(35)
+                .background(Color("Secondary"))
+                .cornerRadius(35)
+
+//                PieChart()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            //The list of nouns that will be filtered by the searchText.
+//            ForEach(self.filteredWords, id: \.self) { word in
+//                Text(word)
+//                    .font(.title)
+//                    .padding([.leading, .bottom])
+//                    .frame(maxWidth: .infinity, alignment: .leading)
+//            }
+//            .frame(maxWidth: .infinity, alignment: .leading)
+
         }
 
         .enableAppleScrollBehavior()
@@ -162,13 +200,84 @@ struct HomeView: View {
         .onAppear {
             Task {
                 await loginViewModel.fetchDataAndCalculateBalance()
+                self.fullDebt = await loginViewModel.calculateFullDebt()
+                self.fullDebtToMe = await loginViewModel.calculateFullDebtToMe()
             }
         }
     }
 
 }
+struct Debt: Identifiable {
+    let id = UUID()
+    let title: String
+    let amount: Double
+}
 
 
+struct PieChart: View {
+    @State private var debts: [Debt] = [
+        .init(title: "Annual", amount: 0.7),
+        .init(title: "Monthly", amount: 0.2),
+    ]
+    var fullDebt: Double
+    var fullDebtToMe: Double
+    var body: some View {
+        Chart(debts) { debt in
+            SectorMark(
+                angle: .value(
+                    Text(verbatim: debt.title),
+                    debt.amount
+                )
+            )
+            .foregroundStyle(
+                by: .value(
+                    Text(verbatim: debt.title),
+                    debt.title
+                )
+                
+            )
+        }
+        .frame(width: 300, height: 300)
+        .onAppear {
+                    self.debts = [
+                        Debt(title: "My debt", amount: fullDebt),
+                        Debt(title: "Debt to me", amount: fullDebtToMe)]
+        }
+//        .chartForegroundStyleScale(
+//            ["My debt": .red, "Debt to me": .blue]
+//        )
+    }
+}
+
+struct Product: Identifiable {
+    let id = UUID()
+    let title: String
+    let revenue: Double
+}
+
+struct SectorChartExample: View {
+    @State private var products: [Product] = [
+        .init(title: "Annual", revenue: 0.7),
+        .init(title: "Monthly", revenue: 0.2),
+    ]
+    
+    var body: some View {
+        Chart(products) { product in
+            SectorMark(
+                angle: .value(
+                    Text(verbatim: product.title),
+                    product.revenue
+                )
+            )
+            .foregroundStyle(
+                by: .value(
+                    Text(verbatim: product.title),
+                    product.title
+                )
+            )
+        }
+    }
+}
 
 
 #Preview {
