@@ -113,11 +113,6 @@ struct HomeView: View {
     @State var searchText: String = ""
     @State private var fullDebt: Double = 0
     @State private var fullDebtToMe: Double = 0
-    
-//    init(loginViewModel: LoginViewModel) async {
-//        self._fullDebt = await State(initialValue: loginViewModel.calculateFullDebt())
-//        self._fullDebtToMe = await State(initialValue:loginViewModel.calculateFullDebtToMe())
-//    }
 
     let words: [String] = ["birthday", "pancake", "expansion", "brick", "bushes", "coal", "calendar", "home", "pig", "bath", "reading", "cellar", "knot", "year", "ink"]
     
@@ -177,18 +172,8 @@ struct HomeView: View {
                 .padding(35)
                 .background(Color("Secondary"))
                 .cornerRadius(35)
-
-//                PieChart()
             }
             .padding()
-            //The list of nouns that will be filtered by the searchText.
-//            ForEach(self.filteredWords, id: \.self) { word in
-//                Text(word)
-//                    .font(.title)
-//                    .padding([.leading, .bottom])
-//                    .frame(maxWidth: .infinity, alignment: .leading)
-//            }
-//            .frame(maxWidth: .infinity, alignment: .leading)
 
         }
 
@@ -249,35 +234,6 @@ struct PieChart: View {
     }
 }
 
-struct Product: Identifiable {
-    let id = UUID()
-    let title: String
-    let revenue: Double
-}
-
-struct SectorChartExample: View {
-    @State private var products: [Product] = [
-        .init(title: "Annual", revenue: 0.7),
-        .init(title: "Monthly", revenue: 0.2),
-    ]
-    
-    var body: some View {
-        Chart(products) { product in
-            SectorMark(
-                angle: .value(
-                    Text(verbatim: product.title),
-                    product.revenue
-                )
-            )
-            .foregroundStyle(
-                by: .value(
-                    Text(verbatim: product.title),
-                    product.title
-                )
-            )
-        }
-    }
-}
 
 
 #Preview {

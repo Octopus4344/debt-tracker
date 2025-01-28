@@ -11,14 +11,12 @@ struct ProfileView: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
     var body: some View{
         VStack {
-            Text("Your profile")
-            Button(action: {
+            CustomButton(text: "Log Out", action: {
                 Task {
                     await loginViewModel.signOut()
                 }
-            }) {
-                Text("Log Out")
-            }
+            })
         }
+        .navigationTitle("You profile")
     }
 }

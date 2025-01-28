@@ -112,13 +112,6 @@ struct FriendListView: View {
                                 }
                             Spacer()
                             Text(String(format: "%.2f zł", loginViewModel.calculateBalance(withUID: friendUID)))
-                            //                                    Button(action: {
-                            //                                        Task {
-                            //                                            await loginViewModel.addTransaction(withUID: friendUID, amount: 4.0, paidBy: friendUID)
-                            //                                        }
-                            //                                    }) {
-                            //                                        Image(systemName: "rectangle.portrait.badge.plus.fill")
-                            //                                    }
                             
                         }
                     }
@@ -268,15 +261,15 @@ struct FriendDetailsView: View {
                 .padding(.bottom, 1)
             Text(String(format: "%.2f zł", balance))
                 .font(.system(size: 50, weight: .bold))
-            AddNew()
 
         }
         
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.black)
         .edgesIgnoringSafeArea(.all)
         .navigationTitle(friendEmail ?? "loading...")
         .navigationBarTitleDisplayMode(.large)
+        .padding(.top, 130)
         
         .bottomSheet(bottomSheetPosition: self.$bottomSheetPosition, switchablePositions: [
             .relativeBottom(0.14),
